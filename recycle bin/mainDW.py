@@ -63,8 +63,8 @@ def upgradeScrapeComments():
                 if (date=='댓글모음'):
                     pass
                 else:
-                    d=[whereat,Ntitle,nid,nick,date,comment] # 데이터베이스 입력
-                    sql='insert into projectTable (whereat,Ntitle,nid,nick,date,comment) values(?,?,?,?,?,?)'
+                    d=[whereat,nid,nick,date,comment] # 데이터베이스 입력
+                    sql='insert into projectTable (whereat,nid,nick,date,comment) values(?,?,?,?,?)'
                     sqlPrs(sql,d,2)
         
 # 오류 나면 이거 다시 실행시켜라
@@ -76,7 +76,7 @@ def goScroll(level=0):
     dheight=driver.execute_script('window.scrollTo(0,{})'.format(level))
 
 # 본 파일
-for k in range(38,58): # 각 언론사 홈페이지로 이동하기
+for k in range(45,58): # 각 언론사 홈페이지로 이동하기
     try:
         if (k<10):
             uurl='https://media.naver.com/press/00'+str(k)+'/ranking'
