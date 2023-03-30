@@ -76,57 +76,62 @@ def goScroll(level=0):
     dheight=driver.execute_script('window.scrollTo(0,{})'.format(level))
 
 # 본 파일
-for k in range(45,58): # 각 언론사 홈페이지로 이동하기
-    try:
-        if (k<10):
-            uurl='https://media.naver.com/press/00'+str(k)+'/ranking'
-        else:
-            uurl='https://media.naver.com/press/0'+str(k)+'/ranking'
-        driver.get(uurl)
-        time.sleep(2)
-
-        clickIt('#ct > div.press_ranking_home > ul > li:nth-child(2) > a') # 댓글 많은 순 정렬
-        time.sleep(2)
-
-        print('\n현재 {}번째 언론사에서 스크레이핑 중'.format(k),end='')
-
-        for i in range(1,21):
-            try:
-                print('.',end='') # 몇 번째 기사인지 알려줌
-
-                driver.find_element(by=By.XPATH,value='//*[@id="ct"]/div[2]/div[2]/ul/li[{}]/a'.format(i)).click() #뉴스 스무 개 차례대로 클릭하기
-                time.sleep(2)
-                Ntitle=driver.find_element(by=By.CSS_SELECTOR,value='#title_area > span').text
-                clickIt('#cbox_module > div.u_cbox_wrap.u_cbox_ko.u_cbox_type_sort_favorite > div.u_cbox_view_comment > a') # 댓글 더보기 
-                time.sleep(2)
-                try:
-                    clickIt('#cbox_module > div.u_cbox_wrap.u_cbox_ko.u_cbox_type_sort_favorite > div.u_cbox_paginate > a') # 댓글 더보기 2
-                    time.sleep(2)
-
-                    clickIt('#cbox_module > div.u_cbox_wrap.u_cbox_ko.u_cbox_type_sort_favorite > div.u_cbox_paginate > a') # 댓글 더보기 3
-                    time.sleep(2)
-
-                    clickIt('#cbox_module > div.u_cbox_wrap.u_cbox_ko.u_cbox_type_sort_favorite > div.u_cbox_paginate > a') # 댓글 더보기 4
-                    time.sleep(2)
-                except:
-                    pass
-            except:
-                pass
-
-            goScroll() # 맨 위로 스크롤하기
-            comButtons=driver.find_elements(by=By.CSS_SELECTOR,value='div.u_cbox_info > span.u_cbox_info_main > button') # 이용자 최근 댓글 창으로 들어가기
-            for comB in comButtons:
-                comB.click()
-                time.sleep(3)
-                try:
-                    upgradeScrapeComments() # 댓글 가져오기
-                except:
-                    pass
-                driver.back()
-
-            driver.back()
+if __name__ == '__main__':
+    print('*******The Program has just begun.*******\n')
+    for k in range(45,58): # 각 언론사 홈페이지로 이동하기
+        try:
+            if (k<10):
+                uurl='https://media.naver.com/press/00'+str(k)+'/ranking'
+            else:
+                uurl='https://media.naver.com/press/0'+str(k)+'/ranking'
+            driver.get(uurl)
             time.sleep(2)
-    except:
-        pass
 
-print('*******The program has successfully ended*******')
+            clickIt('#ct > div.press_ranking_home > ul > li:nth-child(2) > a') # 댓글 많은 순 정렬
+            time.sleep(2)
+
+            print('\n현재 {}번째 언론사에서 스크레이핑 중'.format(k),end='')
+
+            for i in range(1,19):
+                try:
+                    print('.',end='') # 몇 번째 기사인지 알려줌
+
+                    driver.find_element(by=By.XPATH,value='//*[@id="ct"]/div[2]/div[2]/ul/li[{}]/a'.format(i)).click() #뉴스 스무 개 차례대로 클릭하기
+                    time.sleep(2)
+                    Ntitle=driver.find_element(by=By.CSS_SELECTOR,value='#title_area > span').text
+                    clickIt('#cbox_module > div.u_cbox_wrap.u_cbox_ko.u_cbox_type_sort_favorite > div.u_cbox_view_comment > a') # 댓글 더보기 
+                    time.sleep(2)
+                    try:
+                        clickIt('#cbox_module > div.u_cbox_wrap.u_cbox_ko.u_cbox_type_sort_favorite > div.u_cbox_paginate > a') # 댓글 더보기 2
+                        time.sleep(2)
+
+                        clickIt('#cbox_module > div.u_cbox_wrap.u_cbox_ko.u_cbox_type_sort_favorite > div.u_cbox_paginate > a') # 댓글 더보기 3
+                        time.sleep(2)
+
+                        clickIt('#cbox_module > div.u_cbox_wrap.u_cbox_ko.u_cbox_type_sort_favorite > div.u_cbox_paginate > a') # 댓글 더보기 4
+                        time.sleep(2)
+                    except:
+                        pass
+                except:
+                    pass
+
+                goScroll() # 맨 위로 스크롤하기
+                comButtons=driver.find_elements(by=By.CSS_SELECTOR,value='div.u_cbox_info > span.u_cbox_info_main > button') # 이용자 최근 댓글 창으로 들어가기
+                for comB in comButtons:
+                    comB.click()
+                    time.sleep(3)
+                    try:
+                        upgradeScrapeComments() # 댓글 가져오기
+                    except:
+                        pass
+                    driver.back()
+
+                driver.back()
+                time.sleep(2)
+            print('\n')
+        except:
+            pass
+            print('\n')
+
+
+    print('*******The program has successfully ended.*******')
