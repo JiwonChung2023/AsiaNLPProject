@@ -20,7 +20,6 @@ driver.set_window_size(800, 1300)
 url='https://media.naver.com/press/001/ranking'
 driver.get(url)
 time.sleep(2) # 딜레이를 통해 웹이 로딩되는 시간을 기다려줌
-
 # 디비 정의 및 함수 정의하기
 
 dfile='./db/navernews.db'
@@ -76,7 +75,7 @@ def goScroll(level=0):
     dheight=driver.execute_script('window.scrollTo(0,{})'.format(level))
 
 # 본 파일
-for k in range(1,58): # 각 언론사 홈페이지로 이동하기
+for k in range(45,58): # 각 언론사 홈페이지로 이동하기
     try:
         if (k<10):
             uurl='https://media.naver.com/press/00'+str(k)+'/ranking'
