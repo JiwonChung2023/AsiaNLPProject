@@ -63,8 +63,8 @@ def upgradeScrapeComments():
                 if (date=='댓글모음'):
                     pass
                 else:
-                    d=[whereat,Ntitle,nid,nick,date,comment] # 데이터베이스 입력
-                    sql='insert into projectTable (whereat,Ntitle,nid,nick,date,comment) values(?,?,?,?,?,?)'
+                    d=[whereat,nid,nick,date,comment] # 데이터베이스 입력
+                    sql='insert into projectTable (whereat,nid,nick,date,comment) values(?,?,?,?,?)'
                     sqlPrs(sql,d,2)
         
 # 오류 나면 이거 다시 실행시켜라
@@ -90,7 +90,7 @@ for k in range(19,38): # 각 언론사 홈페이지로 이동하기
 
         print('\n현재 {}번째 언론사에서 스크레이핑 중'.format(k),end='')
 
-        for i in range(1,21):
+        for i in range(1,19):
             try:
                 print('.',end='') # 몇 번째 기사인지 알려줌
 

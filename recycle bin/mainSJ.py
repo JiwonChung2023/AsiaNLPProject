@@ -63,8 +63,8 @@ def upgradeScrapeComments():
                 if (date=='댓글모음'):
                     pass
                 else:
-                    d=[whereat,Ntitle,nid,nick,date,comment] # 데이터베이스 입력
-                    sql='insert into projectTable (whereat,Ntitle,nid,nick,date,comment) values(?,?,?,?,?,?)'
+                    d=[whereat,nid,nick,date,comment] # 데이터베이스 입력
+                    sql='insert into projectTable (whereat,nid,nick,date,comment) values(?,?,?,?,?)'
                     sqlPrs(sql,d,2)
         
 # 오류 나면 이거 다시 실행시켜라
