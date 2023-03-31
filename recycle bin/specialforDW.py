@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import requests
 from bs4 import BeautifulSoup as bsp
 from selenium import webdriver
-from selenium.webdriver.common.by import By
+from selenium.webdriver.common.by import By 
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup as bsp
 import time
