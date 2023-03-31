@@ -78,7 +78,7 @@ def goScroll(level=0):
 # 본 파일
 if __name__ == '__main__':
     print('*******The Program has just begun.*******\n')
-    for k in range(19,38): # 각 언론사 홈페이지로 이동하기
+    for k in range(32,38): # 각 언론사 홈페이지로 이동하기
         try:
             if (k<10):
                 uurl='https://media.naver.com/press/00'+str(k)+'/ranking'
