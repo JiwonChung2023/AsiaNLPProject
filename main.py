@@ -1,72 +1,81 @@
+
+# 라이브러리 가져오기
+
 import sqlite3
-import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from kiwipiepy import Kiwi
-import gensim
-from gensim import corpora
-import pyLDAvis
-import pyLDAvis.gensim_models as gm
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
+import requests
+from bs4 import BeautifulSoup as bsp
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from bs4 import BeautifulSoup as bsp
+import time
 
-kiwi=Kiwi()
+# 웹드라이버 가져오기
+cdriver='./driver/chromedriver.exe'
+driver=webdriver.Chrome(cdriver)
+driver.set_window_position(0,50)
+driver.set_window_size(800, 1300)
+url='https://news.naver.com/main/ranking/popularMemo.naver'
+driver.get(url)
+time.sleep(2) # 딜레이를 통해 웹이 로딩되는 시간을 기다려줌
+# 디비 정의 및 함수 정의하기
 
-def getPos(txt='안녕하세요 여러분 매우 반갑습니다.'):
-    res=kiwi.analyze(txt)
-    badwords=['썅']
-    pos=['NNG','NNP','NNB','NR','NP','VV','VA','VX','VCP','VCN','MM','MA','MAJ']
-    tokens=[]
-    for tkn in res[0][0]:
-        for bad in badwords:
-            src=list(tkn)
-            if(src[0]!=bad):
-               # print(src)
-                for p in pos:
-                    if(src[1].find(p)>-1):
-                        tokens.append(src[0])
-    return tokens
+dfile='./Database Folder/myResultDB.db'
+# "select" 구문
+def sqlPrs(sql='',d=[],opt=1):
+    with sqlite3.connect(dfile) as conn:
+        cur=conn.cursor()
+        # select 문의 경우 실행 후 데이터 반환이 필요하다!
+        if opt==1:
+            res=cur.execute(sql).fetchall()
+        elif opt==2:
+            # insert: insert into mvreview (sid,title,whereat,href,ID,date,comment) values(?,?,?,?,?,?,?,?)
+            res=cur.execute(sql,d)
+        else:
+            cur.execute(sql)
+            res=0
+        conn.commit()
+    return(res)
+def scrapeAll():
+    whereatSel='#_COMMENT_NOTICE > p > em'
+    titleSel='#title_area > span'
+    dateSel='#ct > div.media_end_head.go_trans > div.media_end_head_info.nv_notrans > div.media_end_head_info_datestamp > div > span'
+    Xp='//*[@id="cbox_module_wai_u_cbox_content_wrap_tabpanel"]/ul/li[{}]'
 
-def getCBOW(texts=[],opt='CBOW'):
-    copus=[]
-    # 영어화 문서로 변형
-    tarrs=[]
-    for t in texts:
-        tarr=getPos(t)
-        tarrs.append(tarr)
-        copus.append(' '.join(tarr))
-    if opt=='CBOW':    
-        vec=CountVectorizer()   
-    else:
-        vec=TfidfVectorizer()
-    vtr=vec.fit_transform(copus)
-    cols=[t for t,n,in sorted(vec.vocabulary_.items())]
-    return (cols,vtr.toarray(),tarrs)
+    whereat=driver.find_element(by=By.CSS_SELECTOR,value=whereatSel).text
+    title=driver.find_element(by=By.CSS_SELECTOR,value=titleSel).text
+    date=driver.find_element(by=By.CSS_SELECTOR,value=dateSel).text
+    href=driver.current_url.split('?')[0]
+    for k in range(1,6):
+        li=[]
+        src=driver.find_element(by=By.XPATH,value=Xp.format(k)).text
+        li=src.split('\n')
+        ID=li[0]
+        try:
+            comment=li[3]
+        except:
+            comment='삭제된 댓글'
+        d=[title,whereat,href,ID,date,comment] # 데이터베이스 입력
+        sql='insert into newtNcoms (title,whereat,href,ID,date,comment) values(?,?,?,?,?,?)'
+        sqlPrs(sql,d,2)
 
-test=['문재인에 이재명까지…尹 불참 속 4·3 제주 희생자 추념식에 野 총결집',
-'尹지지율, 0.7%p 오른 36.7%…4주 만에 반등[리얼미터]',
-'[단독] “산불현장은 위험하다...여자 공무원들은 집에 가라”',
- '문재인은 오후, 이재명은 오전... 제주 4·3행사에 야권 총출동',
- '"불가능한 내집"…서울서 중위소득 구매가능 아파트 100채중 3채'
- '경찰 "윤 대통령 처가 "공흥지구 특혜 의혹" 수사 이달 마무리"',
- '尹 "4·3 희생자 명예 회복 최선…고통·아픔 보듬어 나갈 것"',
- '한미일, 對잠수함·수색구조훈련 돌입... “北수중 핵공격 대응”'
- ]
+newsSel='#wrap > div.rankingnews._popularWelBase._persist > div.rankingnews_box_wrap._popularRanking > div > div:nth-child({}) > ul > li:nth-child({}) > div > a'
 
-cols,data,tarrs=getCBOW(test,'CBOW')
-tedf=pd.DataFrame(data,columns=cols)
-
-# 코사인 유사도
-def cossim(x,y):
-    x=np.array(x)
-    y=np.array(y)
-    csim=np.dot(x,y)/(np.linalg.norm(x)*np.linalg.norm(y))
-    return csim
-
-text1=tedf.iloc[:1,:]
-#print(text1)
-print(test[0])
-for i,v in tedf.iloc[1:,:].iterrows():
-    #print(test[0])
-    if (cossim(text1,v)>=0.001):
-        print(test[i],':',cossim(text1,v))
+for j in range(1,13):
+    try:
+        for i in range(1,6):
+            try:
+                driver.find_element(by=By.CSS_SELECTOR,value=newsSel.format(j,i)).click()
+                time.sleep(2)
+                scrapeAll()
+                driver.back()
+                time.sleep(2)
+            except:
+                pass
+                driver.back()
+                time.sleep(2)
+    except:
+        pass
