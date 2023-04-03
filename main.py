@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> refs/remotes/origin/main
 
-# 라이브러리 가져오기
-
->>>>>>> 3210a3e1948fc82bb06a7ba299feda58aaea202e
 import sqlite3
 import numpy as np
 import pandas as pd
