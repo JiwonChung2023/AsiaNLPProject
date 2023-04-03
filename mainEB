@@ -1,0 +1,52 @@
+#%%
+import sqlite3
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import requests
+from bs4 import BeautifulSoup as bsp
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from bs4 import BeautifulSoup as bsp
+import time
+#%%
+dfile='./db/navernews.db'
+tempdir='./Database Folder/myResultDB.db'
+# "select" 구문
+def sqlPrs(sql='',dir=dfile,d=[],opt=1):
+    with sqlite3.connect(dir) as conn:
+        cur=conn.cursor()
+        # select 문의 경우 실행 후 데이터 반환이 필요하다!
+        if opt==1:
+            res=cur.execute(sql).fetchall()
+        elif opt==2:
+            # insert: insert into mvreview (rid,title,href,point,user,rday,content) values(?,?,?,?,?,?,?)
+            res=cur.execute(sql,d)
+        else:
+            cur.execute(sql)
+            res=0
+        conn.commit()
+    return(res)
+#%%
+titles=sqlPrs('select title from NewsTitle',dir=tempdir)
+
+# %%
+df=pd.DataFrame(titles,columns=['ntitle'])
+df
+# %%
+def getPos(src=df['ntitle'][0]):
+    res=kiwi.analyze(src)
+    badwords=['하']
+    pos=['NNG','NNP','NNB','NR','NP','VV','VA','VX','VCP','VCN','MM','MA','MAJ']
+    tokens=[]
+    for tkn in res[0][0]:
+        for bad in badwords:
+            src=list(tkn)
+            if (src[0]!=bad):
+                # print(src)
+                for p in pos:
+                    if(src[1].find(p)>-1):
+                        tokens.append(src[0])
+                        break
+    return tokens
