@@ -9,6 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup as bsp
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 #%%
 dfile='./db/navernews.db'
@@ -50,3 +51,62 @@ def getPos(src=df['ntitle'][0]):
                         tokens.append(src[0])
                         break
     return tokens
+#%%
+cdriver='Users/eunbijo/MyPRJ/scrape_02.13~02.17/driver/chromedriver_mac_arm64/chrimedriver*'
+driver=webdriver.Chrome(cdriver)
+url='https://news.naver.com/main/ranking/popularMemo.naver'
+driver.get(url)
+time.sleep(3) #딜레이를 통해서 웹이 로딩되는 시간을 기다려줌.
+
+# %%
+orgsel='#wrap > div.rankingnews._popularWelBase._persist > div.rankingnews_box_wrap._popularRanking > div >'
+# Jsel=orgsel+'div > a'
+
+# Jres=driver.find_elements(by=By.CSS_SELECTOR,value=Jsel) 
+
+
+
+# for r in Jres:
+#     print(r.text)
+
+
+
+# %%
+newtNrevs=[]
+JTsel=orgsel+'div > ul > li > div '
+
+JTres=driver.find_elements(by=By.CSS_SELECTOR,value=JTsel)
+for r in JTres:
+    html=bsp(r.get_attribute('innerHTML'),'html.parser')
+    link=html.select('a') #하이퍼링크에 엮여있는 부분 하나씩 오브젝트화
+    href=link[0].attrs['href']
+    ntitle=link[0].text
+    print(link[0].attrs['href'],ntitle) #
+    newtNrevs.append((href,ntitle))
+    # print(r.text)
+# %%
+#혹시 파일 저장이 필요할 지 몰라서.
+cols=['link','title']
+newtNrevs_temp=pd.DataFrame(newtNrevs,columns=cols)
+newtNrevs_temp.to_csv('./newNrevs.csv',encoding='cp949') 
+# %%
+newtNrevs[0][0]
+#%%
+##함수화 필요
+url=newtNrevs[0][0]
+driver.get(url)
+time.sleep(3)
+logosel='#ct > div.media_end_head.go_trans > div.media_end_head_top > a '
+tgt=driver.find_elements(by=By.CSS_SELECTOR,value=logosel)
+len(tgt)
+print(tgt[0])
+# %%
+
+for t in tgt:
+    html=bsp(t.get_attribute('innerHTML'),'html.parser')
+    imgs=html.find('img')
+    print(imgs)
+    print(imgs['title'])
+    press=imgs['title']
+# print(tgt[0].get_attribute('innerHTML'))
+# %%
