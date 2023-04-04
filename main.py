@@ -1,29 +1,56 @@
-
 import sqlite3
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-import requests
-from bs4 import BeautifulSoup as bsp
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from bs4 import BeautifulSoup as bsp
-import time
+from kiwipiepy import Kiwi
+import gensim
+from gensim import corpora
+import pyLDAvis
+import pyLDAvis.gensim_models as gm
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-# 웹드라이버 가져오기
-cdriver='./driver/chromedriver.exe'
-driver=webdriver.Chrome(cdriver)
-driver.set_window_position(0,50)
-driver.set_window_size(800, 1300)
-url='https://news.naver.com/main/ranking/popularMemo.naver'
-driver.get(url)
-time.sleep(2) # 딜레이를 통해 웹이 로딩되는 시간을 기다려줌
-# 디비 정의 및 함수 정의하기
+# 코사인 유사도
+def cossim(x,y):
+    x=np.array(x)
+    y=np.array(y)
+    csim=np.dot(x,y)/(np.linalg.norm(x)*np.linalg.norm(y))
+    return csim
 
-dfile='./Database Folder/myResultDB.db'
+def getPos(txt='안녕하세요 여러분 매우 반갑습니다.'):
+    res=kiwi.analyze(txt)
+    badwords=['썅']
+    pos=['NNG']
+    tokens=[]
+    for tkn in res[0][0]:
+        for bad in badwords:
+            src=list(tkn)
+            if(src[0]!=bad):
+               # print(src)
+                for p in pos:
+                    if(src[1].find(p)>-1):
+                        tokens.append(src[0])
+    return tokens
+
+def getCBOW(texts=[],opt='CBOW'):
+    copus=[]
+    # 영어화 문서로 변형
+    tarrs=[]
+    for t in texts:
+        tarr=getPos(t)
+        tarrs.append(tarr)
+        copus.append(' '.join(tarr))
+    if opt=='CBOW':    
+        vec=CountVectorizer()   
+    else:
+        vec=TfidfVectorizer()
+    vtr=vec.fit_transform(copus)
+    cols=[t for t,n,in sorted(vec.vocabulary_.items())]
+    return (cols,vtr.toarray(),tarrs)
+
 # "select" 구문
 def sqlPrs(sql='',d=[],opt=1):
+    dfile='./Database Folder/myResultDB.db'
     with sqlite3.connect(dfile) as conn:
         cur=conn.cursor()
         # select 문의 경우 실행 후 데이터 반환이 필요하다!
@@ -37,70 +64,41 @@ def sqlPrs(sql='',d=[],opt=1):
             res=0
         conn.commit()
     return(res)
-def scrapeAll():
-    whereatSel='#_COMMENT_NOTICE > p > em'
-    titleSel='#title_area > span'
-    dateSel='#ct > div.media_end_head.go_trans > div.media_end_head_info.nv_notrans > div.media_end_head_info_datestamp > div > span'
-    Xp='//*[@id="cbox_module_wai_u_cbox_content_wrap_tabpanel"]/ul/li[{}]'
 
-    whereat=driver.find_element(by=By.CSS_SELECTOR,value=whereatSel).text
-    title=driver.find_element(by=By.CSS_SELECTOR,value=titleSel).text
-    date=driver.find_element(by=By.CSS_SELECTOR,value=dateSel).text
-    href=driver.current_url.split('?')[0]
-    for k in range(1,6):
-        li=[]
-        src=driver.find_element(by=By.XPATH,value=Xp.format(k)).text
-        li=src.split('\n')
-        ID=li[0]
-        try:
-            comment=li[3]
-        except:
-            comment='삭제된 댓글'
-        d=[title,whereat,href,ID,date,comment] # 데이터베이스 입력
-        sql='insert into newtNcoms (title,whereat,href,ID,date,comment) values(?,?,?,?,?,?)'
-        sqlPrs(sql,d,2)
+if __name__=='__main__':
+    
+    kiwi=Kiwi()
+    test=sqlPrs('select title from newtNcoms')
+
+    qqList=[]
+    for p in test:
+        qq=p[0]
+        qqList.append(qq)
+    test=qqList
+    #print(text1)
+    tests=[]
+    cosses=[]
+    sameTitle=''
+    print('--------읽어본 기사 제목--------')
+    yourNews=input('기사 제목을 입력하세요: ')
+    test.insert(0,yourNews)
+    print(test[0])
+    print('-------------------------------')
+    cols,data,tarrs=getCBOW(test,'CBOW')
+    tedf=pd.DataFrame(data,columns=cols)
 
 
-buttonSel='#wrap > div.rankingnews._popularWelBase._persist > button'
-def goScroll():
-    dheight=driver.execute_script('return document.documentElement.scrollHeight')
-    dheight=driver.execute_script('window.scrollTo(0,{})'.format(dheight))
-goScroll()
-driver.find_element(by=By.CSS_SELECTOR,value=buttonSel).click()
-time.sleep(2)
-driver.forward()
-driver.forward()
-for j in range(1,13):
-    try:
-        for i in range(1,6):
-            try:
-                newsSel='#wrap > div.rankingnews._popularWelBase._persist > div.rankingnews_box_wrap._popularRanking > div > div:nth-child({}) > ul > li:nth-child({}) > div > a'
-                driver.find_element(by=By.CSS_SELECTOR,value=newsSel.format(j,i)).click()
-                time.sleep(2)
-                scrapeAll()
-                driver.back()
-                time.sleep(2)
-            except:
-                pass
-                driver.back()
-                time.sleep(2)
-    except:
-        pass
-# %%
-for j in range(1,13):
-    try:
-        for i in range(1,6):
-            try:
-                newsSel='#wrap > div.rankingnews._popularWelBase._persist > div.rankingnews_box_wrap._popularRanking > div._officeCard._officeCard12 > div:nth-child({}) > ul > li:nth-child({}) > div > a'
-                driver.find_element(by=By.CSS_SELECTOR,value=newsSel.format(j,i)).click()
-                time.sleep(2)
-                scrapeAll()
-                driver.back()
-                time.sleep(2)
-            except:
-                pass
-                driver.back()
-                time.sleep(2)
-    except:
-        pass
-# %%
+
+    text1=tedf.iloc[:1,:]
+    for i,v in tedf.iloc[1:,:].iterrows():
+        #print(test[0])
+        if (cossim(text1,v)>=0.001):
+            if (test[0]!=test[i]):
+                if (sameTitle!=test[i]):
+                    tests.append(test[i])
+                    cosses.append(cossim(text1,v))
+                    myZip=list(zip(tests,cosses))
+                    sameTitle=test[i]
+
+    for k in myZip:
+        print(k,'\n')
