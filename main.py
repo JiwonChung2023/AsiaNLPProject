@@ -62,12 +62,21 @@ def scrapeAll():
         sql='insert into newtNcoms (title,whereat,href,ID,date,comment) values(?,?,?,?,?,?)'
         sqlPrs(sql,d,2)
 
-newsSel='#wrap > div.rankingnews._popularWelBase._persist > div.rankingnews_box_wrap._popularRanking > div > div:nth-child({}) > ul > li:nth-child({}) > div > a'
 
+buttonSel='#wrap > div.rankingnews._popularWelBase._persist > button'
+def goScroll():
+    dheight=driver.execute_script('return document.documentElement.scrollHeight')
+    dheight=driver.execute_script('window.scrollTo(0,{})'.format(dheight))
+goScroll()
+driver.find_element(by=By.CSS_SELECTOR,value=buttonSel).click()
+time.sleep(2)
+driver.forward()
+driver.forward()
 for j in range(1,13):
     try:
         for i in range(1,6):
             try:
+                newsSel='#wrap > div.rankingnews._popularWelBase._persist > div.rankingnews_box_wrap._popularRanking > div > div:nth-child({}) > ul > li:nth-child({}) > div > a'
                 driver.find_element(by=By.CSS_SELECTOR,value=newsSel.format(j,i)).click()
                 time.sleep(2)
                 scrapeAll()
@@ -79,3 +88,21 @@ for j in range(1,13):
                 time.sleep(2)
     except:
         pass
+# %%
+for j in range(1,13):
+    try:
+        for i in range(1,6):
+            try:
+                newsSel='#wrap > div.rankingnews._popularWelBase._persist > div.rankingnews_box_wrap._popularRanking > div._officeCard._officeCard12 > div:nth-child({}) > ul > li:nth-child({}) > div > a'
+                driver.find_element(by=By.CSS_SELECTOR,value=newsSel.format(j,i)).click()
+                time.sleep(2)
+                scrapeAll()
+                driver.back()
+                time.sleep(2)
+            except:
+                pass
+                driver.back()
+                time.sleep(2)
+    except:
+        pass
+# %%
